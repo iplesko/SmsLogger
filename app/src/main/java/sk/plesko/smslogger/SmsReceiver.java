@@ -44,10 +44,12 @@ public class SmsReceiver extends BroadcastReceiver {
                 }
             }
 
-            Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction(SMS_RECEIVED_BROADCAST_ACTION);
-            broadcastIntent.putExtra(SMS_EXTRA_TAG, smsMessageStringArray);
-            context.sendBroadcast(broadcastIntent);
+            if (i > 0) {
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.setAction(SMS_RECEIVED_BROADCAST_ACTION);
+                broadcastIntent.putExtra(SMS_EXTRA_TAG, smsMessageStringArray);
+                context.sendBroadcast(broadcastIntent);
+            }
         }
     }
 
