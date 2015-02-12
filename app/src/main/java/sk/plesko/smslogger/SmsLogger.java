@@ -8,17 +8,17 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import sk.plesko.smslogger.data.SmsLog;
 
 /**
  * Created by Ivan on 11.2.2015.
  */
 public class SmsLogger {
 
-    private final String LOG_TAG = SmsLogger.class.getSimpleName();
-    private final String DIR_NAME = "smsLog";
-    private final String FILE_NAME = "log.txt";
+    public static final String LOG_TAG = SmsLogger.class.getSimpleName();
+    public static final String DIR_NAME = "smsLog";
+    public static final String FILE_NAME = "log.txt";
 
     private Context context;
 
@@ -26,42 +26,46 @@ public class SmsLogger {
         this.context = context;
     }
 
-    public void logSms(SmsMessage smsMessage) {
+    public SmsLog logSms(SmsMessage smsMessage) {
+        SmsLog smsLog = new SmsLog(smsMessage.getTimestampMillis(), smsMessage.getDisplayOriginatingAddress(), smsMessage.getMessageBody());
+        File logFile = getLogFile(context);
+        if (logFile == null) {
+            return null;
+        }
+
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(logFile, true);
+            fileWriter.append(smsLog.toString() + System.getProperty("line.separator"));
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error while logging SMS: " + e.getMessage());
+        } finally {
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Error while closing sms log file output stream: " + e.getMessage());
+                }
+            }
+        }
+        return smsLog;
+    }
+
+    public static File getLogFile(Context context) {
         if (isExternalStorageWritable()) {
             File filePath = new File(context.getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS), DIR_NAME);
             if (!filePath.exists()) {
                 if (!filePath.mkdirs()) {
                     Log.e(LOG_TAG, "Error while creating directory");
-                    return;
+                    return null;
                 }
             }
-            FileWriter fileWriter = null;
-            try {
-                Log.d(LOG_TAG, filePath.getCanonicalPath() + FILE_NAME);
-                fileWriter = new FileWriter(new File(filePath, FILE_NAME), true);
-                fileWriter.append(getLogLine(smsMessage));
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error while logging SMS: " + e.getMessage());
-            } finally {
-                if (fileWriter != null) {
-                    try {
-                        fileWriter.close();
-                    } catch (IOException e) {
-                        Log.e(LOG_TAG, "Error while closing sms log file output stream: " + e.getMessage());
-                    }
-                }
-
-            }
+            return new File(filePath, FILE_NAME);
         }
+        return null;
     }
 
-    private String getLogLine(SmsMessage smsMessage) {
-        Date date = new Date(smsMessage.getTimestampMillis());
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return simpleDateFormat.format(date) + " | FROM: "+smsMessage.getDisplayOriginatingAddress() + " | MESSAGE: " + smsMessage.getMessageBody() + System.getProperty("line.separator");
-    }
-
-    private boolean isExternalStorageWritable() {
+    private static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             return true;

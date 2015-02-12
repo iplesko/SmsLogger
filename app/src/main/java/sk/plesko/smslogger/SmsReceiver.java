@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.telephony.SmsMessage;
 
+import sk.plesko.smslogger.data.SmsLog;
+
 /**
  * Created by Ivan on 11.2.2015.
  */
@@ -13,27 +15,39 @@ public class SmsReceiver extends BroadcastReceiver {
 
     private final String LOG_TAG = SmsReceiver.class.getSimpleName();
     private final String SMS_RECEIVED_ACTION = "android.provider.Telephony.SMS_RECEIVED";
+    public static final String SMS_RECEIVED_BROADCAST_ACTION = "SMS_RECEIVED_ACTION";
+    public static final String SMS_EXTRA_TAG = "SMS_MESSAGES";
 
     private NumberWatchList numberWatchList = null;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (SMS_RECEIVED_ACTION.equals(intent.getAction())) {
-
             if (numberWatchList == null) {
                 numberWatchList = new NumberWatchList(context);
             }
 
             SmsLogger smsLogger = new SmsLogger(context);
             SmsMessage[] smsMessages = getMessagesFromIntent(intent);
+            String[] smsMessageStringArray = new String[smsMessages.length];
+
+            int i = 0;
             for (SmsMessage smsMessage : smsMessages) {
                 if (numberWatchList.inList(smsMessage.getDisplayOriginatingAddress())) {
-                    smsLogger.logSms(smsMessage);
+                    SmsLog smsLog = smsLogger.logSms(smsMessage);
                     muteNotificationSound(context);
+
+                    smsMessageStringArray[i] = smsLog.toString();
+                    i++;
                 } else {
                     unmuteNotificationSound(context);
                 }
             }
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(SMS_RECEIVED_BROADCAST_ACTION);
+            broadcastIntent.putExtra(SMS_EXTRA_TAG, smsMessageStringArray);
+            context.sendBroadcast(broadcastIntent);
         }
     }
 
