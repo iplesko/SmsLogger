@@ -14,6 +14,10 @@ import java.util.List;
 import sk.plesko.smslogger.SmsLogger;
 import sk.plesko.smslogger.data.SmsLog;
 
+/**
+ * Created by Ivan on 12.2.2015.
+ * ParseLogAsyncTask can parse SMS log file and send it to a object of a class implementing LogListReceiver interface.
+ */
 public class ParseLogAsyncTask extends AsyncTask<Void, Void, List<SmsLog>> {
 
     private final String LOG_TAG = ParseLogAsyncTask.class.getSimpleName();

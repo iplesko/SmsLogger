@@ -12,6 +12,7 @@ import java.util.Map;
 
 /**
  * Created by Ivan on 11.2.2015.
+ * Number watch list class parses and holds list of phone numbers from watch list
  */
 public class NumberWatchList {
 

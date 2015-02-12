@@ -10,6 +10,8 @@ import sk.plesko.smslogger.data.SmsLog;
 
 /**
  * Created by Ivan on 11.2.2015.
+ * SmsReceiver receives SMS_RECEIVED broadcast from Android system, filters it with NumberWatchList and uses SmsLogger to log it to file.
+ * SmsReceiver also notifies MainActivity about messages from watch list.
  */
 public class SmsReceiver extends BroadcastReceiver {
 
@@ -29,6 +31,8 @@ public class SmsReceiver extends BroadcastReceiver {
 
             SmsLogger smsLogger = new SmsLogger(context);
             SmsMessage[] smsMessages = getMessagesFromIntent(intent);
+
+            // messages to be sent to the main activity for live updating
             String[] smsMessageStringArray = new String[smsMessages.length];
 
             int i = 0;
@@ -36,7 +40,6 @@ public class SmsReceiver extends BroadcastReceiver {
                 if (numberWatchList.inList(smsMessage.getDisplayOriginatingAddress())) {
                     SmsLog smsLog = smsLogger.logSms(smsMessage);
                     muteNotificationSound(context);
-
                     smsMessageStringArray[i] = smsLog.toString();
                     i++;
                 } else {

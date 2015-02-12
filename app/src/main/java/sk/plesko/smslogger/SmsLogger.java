@@ -13,6 +13,7 @@ import sk.plesko.smslogger.data.SmsLog;
 
 /**
  * Created by Ivan on 11.2.2015.
+ * SmsLogger class logs SMSs to the log file
  */
 public class SmsLogger {
 

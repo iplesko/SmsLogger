@@ -20,7 +20,11 @@ import sk.plesko.smslogger.adapter.LogListAdapter;
 import sk.plesko.smslogger.data.SmsLog;
 import sk.plesko.smslogger.parser.ParseLogAsyncTask;
 
-
+/**
+ * Created by Ivan on 12.2.2015.
+ * Main actitivy class
+ * Displays the log list, offers a button to erase all logs
+ */
 public class MainActivity extends ActionBarActivity {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -32,14 +36,43 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // prepare our custom array adapter and set it to log list view
         mLogListAdapter = new LogListAdapter(this, R.layout.log_list_item);
         ListView logListView = (ListView) findViewById(R.id.log_list_view);
         logListView.setAdapter(mLogListAdapter);
 
+        // initialize broadcast receiver that receives broadcast when new SMS from watch list is received :)
+        mBroadcastReceiver = new WatchedSmsReceivedBroadcastReceiver();
+    }
+
+    /**
+     * Receives SMSs from number in watch list and adds them to the log list
+     */
+    private class WatchedSmsReceivedBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && SmsReceiver.SMS_RECEIVED_BROADCAST_ACTION.equals(intent.getAction()) && intent.hasExtra(SmsReceiver.SMS_EXTRA_TAG)) {
+                String[] smsMessages = intent.getStringArrayExtra(SmsReceiver.SMS_EXTRA_TAG);
+                for (String smsMessage : smsMessages) {
+                    mLogListAdapter.add(new SmsLog(smsMessage));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // parse the log file asynchronously
+        mLogListAdapter.clear();
         ParseLogAsyncTask parseLogAsyncTask = new ParseLogAsyncTask(this, new LogListReceiver());
         parseLogAsyncTask.execute();
 
-        mBroadcastReceiver = new WatchedSmsReceivedBroadcastReceiver();
+        // register broadcast receiver on SmsReceiver.SMS_RECEIVED_BROADCAST_ACTION intent action
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(SmsReceiver.SMS_RECEIVED_BROADCAST_ACTION);
+        this.registerReceiver(mBroadcastReceiver,intentFilter);
     }
 
     private class LogListReceiver implements ParseLogAsyncTask.LogListReceiver {
@@ -49,31 +82,11 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private class WatchedSmsReceivedBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent != null && SmsReceiver.SMS_RECEIVED_BROADCAST_ACTION.equals(intent.getAction()) && intent.hasExtra(SmsReceiver.SMS_EXTRA_TAG)) {
-                String[] smsMessages = intent.getStringArrayExtra(SmsReceiver.SMS_EXTRA_TAG);
-
-                for (String smsMessage : smsMessages) {
-                    mLogListAdapter.add(new SmsLog(smsMessage));
-
-                }
-
-            }
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        IntentFilter iff = new IntentFilter();
-        iff.addAction(SmsReceiver.SMS_RECEIVED_BROADCAST_ACTION);
-        this.registerReceiver(mBroadcastReceiver,iff);
-    }
     @Override
     public void onPause() {
         super.onPause();
+
+        // unregister broadcast receiver on
         this.unregisterReceiver(mBroadcastReceiver);
     }
 

@@ -11,7 +11,8 @@ import sk.plesko.smslogger.R;
 import sk.plesko.smslogger.data.SmsLog;
 
 /**
- * Created by Ivan on 31.7.2014.
+ * Created by Ivan on 12.2.2015.
+ * LogList adapter is used in MainActivity to view SMS messages from the log file
  */
 public class LogListAdapter extends ArrayAdapter<SmsLog> {
 

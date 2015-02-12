@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 /**
  * Created by Ivan on 12.2.2015.
+ * SmsLog class representing SMS log with number, message and date
+ * Can parse and serialize itself
  */
 public class SmsLog {
 
